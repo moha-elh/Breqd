@@ -16,8 +16,8 @@ function Game() {
   };
 
   //trigger forjumping and starting the game added once after mounting coz of the []
-useEffect(()=>{
-  if (gameStarted == false) {
+  useEffect(() => {
+    if (!gameStarted) {
       window.addEventListener("keydown", (event) => {
         if (event.code == "Space") {
           event.preventDefault();
@@ -50,17 +50,15 @@ useEffect(()=>{
       console.log("jump removed");
       console.log("Game Ended");
     };
-;
-},[gameStarted])
-    
+  }, [gameStarted]);
 
   const startGame = () => {
-    setBreadY(-(dimensions.height / 2));
     setGameStarted(true);
   };
 
   const endGame = () => {
     setGameStarted(false);
+    setBreadY(-800);
     return "game ended";
   };
 
