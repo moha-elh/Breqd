@@ -1,5 +1,5 @@
 import React, { useRef, useState } from "react";
-function Background({ onDimensionChange }) {
+function Background({ onDimensionChange }:{onDimensionChange:Function}) {
   const imgRef = useRef(null);
   const handleImageLoad = () => {
     if (imgRef.current) {

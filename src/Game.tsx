@@ -1,7 +1,6 @@
+import { useEffect, useState } from "react";
 import Background from "./Backgroud";
 import Bread from "./Bread";
-import FirePipe from "./FirePipe";
-import { useState, useEffect, useRef } from "react";
 
 function Game() {
   const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
@@ -36,13 +35,13 @@ function Game() {
 
     return () => {
       window.removeEventListener("keydown", (event) => {
-        if (event.code == "space") {
+        if (event.code == "Space") {
           event.preventDefault();
           startGame();
         }
       });
       window.removeEventListener("keydow", (event) => {
-        if (event.code === "space") {
+        if (event.code === "Space") {
           event.preventDefault();
           jump();
         }
@@ -74,7 +73,7 @@ function Game() {
   }, [gameStarted]);
 
   function gameLoop() {
-    if (gameStarted) {
+    if (gameStarted==true) {
       setVelocity((prevVelocity) => {
         const newVelocity = prevVelocity + gravity;
         setBreadY((prevBreadY) => prevBreadY + newVelocity);
@@ -87,14 +86,16 @@ function Game() {
 
   return (
     <div className="flex items-center justify-center h-screen bg-black">
-      <div className="relative">
-        <div>
+      <div className="flex relative">
+        <div className="size-60">
           <button className="bg-blue-500" onClick={endGame}>
             end
           </button>
         </div>
+        <div>
         <Background onDimensionChange={setDimensions}></Background>
         <Bread y={breadY}></Bread>
+        </div>
       </div>
     </div>
   );
