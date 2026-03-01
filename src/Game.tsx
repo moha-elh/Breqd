@@ -1,93 +1,71 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef, type KeyboardEvent } from "react";
 import Background from "./Backgroud";
 import Bread from "./Bread";
 
 function Game() {
   const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
   const [breadY, setBreadY] = useState(-345);
-  const [velocity, setVelocity] = useState(0);
   const [gameStarted, setGameStarted] = useState(false);
-  const gravity = 0.08;
+  const velocityRef = useRef(0);
+  const requestAnimationRef = useRef<number>(0);
+  
+  const gravity = 0.5;
 
   //Jumping mechanism
   const jump = () => {
-    setVelocity(-4);
+    velocityRef.current= -10;
   };
-
-  //trigger forjumping and starting the game added once after mounting coz of the []
-  useEffect(() => {
-    if (!gameStarted) {
-      window.addEventListener("keydown", (event) => {
-        if (event.code == "Space") {
-          event.preventDefault();
-          startGame();
-        }
-      });
-      console.log("click pressed for starting game");
-    }
-    window.addEventListener("keydown", (event) => {
-      if (event.code === "Space") {
-        event.preventDefault();
-        jump();
-      }
-    });
-    console.log("click pressed for Jumping");
-
-    return () => {
-      window.removeEventListener("keydown", (event) => {
-        if (event.code == "Space") {
-          event.preventDefault();
-          startGame();
-        }
-      });
-      window.removeEventListener("keydow", (event) => {
-        if (event.code === "Space") {
-          event.preventDefault();
-          jump();
-        }
-      });
-      console.log("jump removed");
-      console.log("Game Ended");
-    };
-  }, [gameStarted]);
-
   const startGame = () => {
     setGameStarted(true);
   };
-
   const endGame = () => {
     setGameStarted(false);
-    setBreadY(-800);
-    return "game ended";
+    setBreadY(-345);
   };
 
-  //game loop
+  //central event listener
   useEffect(() => {
-    if (gameStarted) {
-      // Background dimension
-      console.log("the dimension of the background is ", dimensions);
-      console.log("the position of the bread is  :", dimensions.height / 2);
-      console.log("Bread starting point", breadY);
-      gameLoop();
-    }
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.code === "Space") {
+        event.preventDefault();
+        if (!gameStarted) {
+          startGame();
+          jump(); // Jump on the first press too!
+        } else {
+          jump();
+        }
+      }
+    };
+      window.addEventListener("keydown", handleKeyDown);
+      return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+      };
   }, [gameStarted]);
 
-  function gameLoop() {
-    if (gameStarted==true) {
-      setVelocity((prevVelocity) => {
-        const newVelocity = prevVelocity + gravity;
-        setBreadY((prevBreadY) => prevBreadY + newVelocity);
-        return newVelocity;
-      });
-
-      requestAnimationFrame(gameLoop);
+  //game loop
+  useEffect(()=>{
+    const gameLoop =()=>{
+    velocityRef.current += gravity;
+    setBreadY((prev)=> prev+velocityRef.current);
+    requestAnimationRef.current = requestAnimationFrame(gameLoop);
+    };
+    if(gameStarted){
+       requestAnimationRef.current = requestAnimationFrame(gameLoop);
     }
-  }
+    return ()=>{
+      if(requestAnimationRef.current){
+        cancelAnimationFrame(requestAnimationRef.current)
+      }
+    }
+  })
 
+
+
+  
   return (
     <div className="flex items-center justify-center h-screen bg-black">
       <div className="flex relative">
-        <div className="size-60">
+        <div>
           <button className="bg-blue-500" onClick={endGame}>
             end
           </button>
@@ -100,5 +78,4 @@ function Game() {
     </div>
   );
 }
-
 export default Game;
