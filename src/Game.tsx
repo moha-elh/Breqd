@@ -3,8 +3,9 @@ import Background from "./Backgroud";
 import Bread from "./Bread";
 
 function Game() {
-  const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
-  const [breadY, setBreadY] = useState(-345);
+  const [backgroundDimensions, setBackgroundDimensions] = useState({ width: 0, height: 0 });
+  const [breadDimensions, setBreadDimensions] = useState({width:0, height:0});
+  const [breadY, setBreadY] = useState(0);
   const [gameStarted, setGameStarted] = useState(false);
   const velocityRef = useRef(0);
   const requestAnimationRef = useRef<number>(0);
@@ -17,11 +18,21 @@ function Game() {
   };
   const startGame = () => {
     setGameStarted(true);
+    console.log("Game Started !")
+
   };
   const endGame = () => {
     setGameStarted(false);
-    setBreadY(-345);
+    setBreadY(-(backgroundDimensions.height/2) - (breadDimensions.height/2));
+    console.log("Game Ended !")
   };
+  //setting Bread Y once the background is loaded
+  useEffect(()=>{
+    if(backgroundDimensions.height > 0){
+      const startBreadY = -(backgroundDimensions.height/2) - (breadDimensions.height/2)
+    setBreadY(startBreadY);
+    }
+  },[backgroundDimensions.height, breadDimensions.height])
 
   //central event listener
   useEffect(() => {
@@ -46,7 +57,15 @@ function Game() {
   useEffect(()=>{
     const gameLoop =()=>{
     velocityRef.current += gravity;
-    setBreadY((prev)=> prev+velocityRef.current);
+    setBreadY((prev) => {
+      if(prev+velocityRef.current == backgroundDimensions.height){
+         prev+velocityRef.current;
+      }
+      else{
+        prev+velocityRef.current;
+      }
+      return  prev+velocityRef.current;
+    });
     requestAnimationRef.current = requestAnimationFrame(gameLoop);
     };
     if(gameStarted){
@@ -71,8 +90,10 @@ function Game() {
           </button>
         </div>
         <div>
-        <Background onDimensionChange={setDimensions}></Background>
-        <Bread y={breadY}></Bread>
+        <Background onDimensionChange={setBackgroundDimensions}></Background>
+        {backgroundDimensions.height > 0 && 
+          (<Bread y={breadY} onDimensionChange ={setBreadDimensions}></Bread>)}
+
         </div>
       </div>
     </div>

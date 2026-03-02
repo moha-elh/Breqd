@@ -1,7 +1,7 @@
-import React, { useRef, useState } from "react";
+import { useRef } from "react";
 function Background({ onDimensionChange }:{onDimensionChange:Function}) {
   const imgRef = useRef(null);
-  const handleImageLoad = () => {
+  const handleImageLoad = () => { 
     if (imgRef.current) {
       // Get the *rendered* size (affected by CSS)
       const renderedWidth = imgRef.current.clientWidth;
@@ -11,7 +11,7 @@ function Background({ onDimensionChange }:{onDimensionChange:Function}) {
   };
   return (
     <img
-      className="h-screen border-20 border-white rounded-md blur-[1px]"
+      className="h-screen border-white rounded-md blur-[1px]"
       src="../public/background.png"
       ref={imgRef}
       onLoad={handleImageLoad}
