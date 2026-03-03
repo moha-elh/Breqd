@@ -2,7 +2,7 @@ import { useRef } from "react";
 
 
 function Bread({ y, onDimensionChange }: { y: number, onDimensionChange: Function }) {
-  const breadRef = useRef(null);
+  const breadRef = useRef<HTMLImageElement>(null);
   const handleLoad =()=>{
   if(breadRef.current){
     const breadWidth = breadRef.current.width;

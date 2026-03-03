@@ -1,6 +1,6 @@
 import { useRef } from "react";
 function Background({ onDimensionChange }:{onDimensionChange:Function}) {
-  const imgRef = useRef(null);
+  const imgRef = useRef<HTMLImageElement>(null);
   const handleImageLoad = () => { 
     if (imgRef.current) {
       // Get the *rendered* size (affected by CSS)

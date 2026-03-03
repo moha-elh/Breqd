@@ -11,6 +11,8 @@ function Game() {
   const requestAnimationRef = useRef<number>(0);
   
   const gravity = 0.5;
+  const backgroundTop= -(backgroundDimensions.height);
+  const backgroundBottom = -(breadDimensions.height);
 
   //Jumping mechanism
   const jump = () => {
@@ -56,6 +58,11 @@ function Game() {
   //game loop
   useEffect(()=>{
     const gameLoop =()=>{
+      console.log("bread position: ", breadY)
+    if(breadY > backgroundBottom + 5){
+      endGame();
+      console.log('you hit the floor !')
+    }
     velocityRef.current += gravity;
     setBreadY((prev) => {
       if(prev+velocityRef.current == backgroundDimensions.height){
@@ -84,7 +91,7 @@ function Game() {
   return (
     <div className="flex items-center justify-center h-screen bg-black">
       <div className="flex relative">
-        <div>
+        <div className="size-50">
           <button className="bg-blue-500" onClick={endGame}>
             end
           </button>
