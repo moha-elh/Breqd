@@ -11,8 +11,8 @@ function Game() {
   const requestAnimationRef = useRef<number>(0);
   
   const gravity = 0.5;
-  const backgroundTop= -(backgroundDimensions.height);
-  const backgroundBottom = -(breadDimensions.height);
+  const backgroundTop= -(backgroundDimensions.height) -(breadDimensions.height/3);
+  const backgroundBottom = -(breadDimensions.height) +(breadDimensions.height/5);
 
   //Jumping mechanism
   const jump = () => {
@@ -59,19 +59,20 @@ function Game() {
   useEffect(()=>{
     const gameLoop =()=>{
       console.log("bread position: ", breadY)
-    if(breadY > backgroundBottom + 5){
+    if(breadY > backgroundBottom){
       endGame();
       console.log('you hit the floor !')
     }
     velocityRef.current += gravity;
     setBreadY((prev) => {
-      if(prev+velocityRef.current == backgroundDimensions.height){
-         prev+velocityRef.current;
+      if(prev+velocityRef.current < backgroundTop){
+         console.log("you hit the top");
+         setBreadY(backgroundTop);
       }
       else{
         prev+velocityRef.current;
       }
-      return  prev+velocityRef.current;
+      return (prev+velocityRef.current);
     });
     requestAnimationRef.current = requestAnimationFrame(gameLoop);
     };
