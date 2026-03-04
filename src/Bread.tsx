@@ -1,24 +1,35 @@
 import { useRef } from "react";
 
-
-function Bread({ y, onDimensionChange }: { y: number, onDimensionChange: Function }) {
+function Bread({
+  y,
+  width,
+  onDimensionChange,
+}: {
+  y: number;
+  width: number;
+  onDimensionChange: (dims: { width: number; height: number }) => void;
+}) {
   const breadRef = useRef<HTMLImageElement>(null);
-  const handleLoad =()=>{
-  if(breadRef.current){
-    const breadWidth = breadRef.current.width;
-    const breadHeight = breadRef.current.height;
 
-    onDimensionChange({width: breadWidth, height: breadHeight})
-  }
+  const handleLoad = () => {
+    if (breadRef.current) {
+      const breadWidth = breadRef.current.width;
+      const breadHeight = breadRef.current.height;
+      onDimensionChange({ width: breadWidth, height: breadHeight });
+    }
   };
+
   return (
     <img
       src="/bread.png"
-      className="w-28 h-auto absolute z-20"
-      ref= {breadRef}
+      className="h-auto absolute z-20"
+      style={{
+        width: `${width}px`,
+        transform: `translateY(${y}px)`,
+      }}
+      ref={breadRef}
       onLoad={handleLoad}
-      style={{ transform: `translateY(${y}px)` }}
-    ></img>
+    />
   );
 }
 

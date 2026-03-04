@@ -4,29 +4,69 @@ import Bread from "./Bread";
 import FirePipe from "./FirePipe";
 import { getVisibleInsets } from "./getVisibleInsets";
 
+// Baseline dimensions the game was originally designed for
+const BASELINE_HEIGHT = 900;
+const BASELINE_WIDTH = 600;
+
+// Design-time constants (will be scaled at runtime)
+const BASE_GRAVITY = 0.5;
+const BASE_JUMP_VELOCITY = -10;
+const BASE_PIPE_WIDTH = 80;
+const BASE_PIPE_HEIGHT = 500;
+const BASE_GAP_SIZE = 200;
+const BASE_PIPE_SPEED = 3;
+const BASE_PIPE_SPAWN_DIST = 400;
+const BASE_PIPE_CLEANUP = -500;
+const BASE_BREAD_WIDTH = 112; // w-28 = 7rem = 112px at default font size
+
 function Game() {
   const [backgroundDimensions, setBackgroundDimensions] = useState({ width: 0, height: 0 });
   const [breadDimensions, setBreadDimensions] = useState({ width: 0, height: 0 });
   const [breadY, setBreadY] = useState(0);
   const [gameStarted, setGameStarted] = useState(false);
   const [gamePaused, setGamePaused] = useState(false);
+  const [gameOver, setGameOver] = useState(false);
   const [pipes, setPipes] = useState<{ x: number; gapY: number; scored: boolean }[]>([]);
   const [score, setScore] = useState(0);
+  const [isMobile, setIsMobile] = useState(false);
   const velocityRef = useRef(0);
   const breadRef = useRef<HTMLDivElement>(null);
   const pipeContainerRef = useRef<HTMLDivElement>(null);
+  const gameAreaRef = useRef<HTMLDivElement>(null);
 
   // Stores the visible insets (fraction of transparent padding) for bread and pipe PNGs
   const breadInsetsRef = useRef({ top: 0, bottom: 0, left: 0, right: 0 });
   const pipeInsetsRef = useRef({ top: 0, bottom: 0, left: 0, right: 0 });
   const [insetsReady, setInsetsReady] = useState(false);
 
-  const gravity = 0.5;
-  const PIPE_WIDTH = 80;  // approximate width of the visible pipe
-  const PIPE_HEIGHT = 400;
-  const GAP_SIZE = 200;
+  // Separate scale factors for vertical (height-based) and horizontal (width-based) things
+  const vScale = backgroundDimensions.height > 0
+    ? backgroundDimensions.height / BASELINE_HEIGHT
+    : 1;
+  const hScale = backgroundDimensions.width > 0
+    ? backgroundDimensions.width / BASELINE_WIDTH
+    : 1;
+
+  // Vertical constants — scale with height
+  const gravity = BASE_GRAVITY * vScale;
+  const GAP_SIZE = BASE_GAP_SIZE * vScale;
+  const PIPE_HEIGHT = BASE_PIPE_HEIGHT * vScale;
+  // Horizontal constants — scale with width
+  const PIPE_WIDTH = BASE_PIPE_WIDTH * hScale;
+  const PIPE_SPEED = BASE_PIPE_SPEED * hScale;
+  const PIPE_SPAWN_DIST = BASE_PIPE_SPAWN_DIST * hScale;
+  const PIPE_CLEANUP = BASE_PIPE_CLEANUP * hScale;
+  const BREAD_WIDTH = BASE_BREAD_WIDTH * hScale;
   const backgroundTop = -(backgroundDimensions.height) - (breadDimensions.height / 3);
   const backgroundBottom = -(breadDimensions.height) + (breadDimensions.height / 5);
+
+  // Detect mobile
+  useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth < 768);
+    checkMobile();
+    window.addEventListener("resize", checkMobile);
+    return () => window.removeEventListener("resize", checkMobile);
+  }, []);
 
   // Scan PNG images once they load to find actual visible bounds
   useEffect(() => {
@@ -35,7 +75,6 @@ function Game() {
     breadImg.src = "/bread.png";
     breadImg.onload = () => {
       breadInsetsRef.current = getVisibleInsets(breadImg);
-      console.log("Bread visible insets (fractions):", breadInsetsRef.current);
     };
 
     const pipeImg = new Image();
@@ -43,33 +82,51 @@ function Game() {
     pipeImg.src = "/Fire pipe.png";
     pipeImg.onload = () => {
       pipeInsetsRef.current = getVisibleInsets(pipeImg);
-      console.log("Pipe visible insets (fractions):", pipeInsetsRef.current);
       setInsetsReady(true);
     };
   }, []);
 
   const jump = () => {
-    velocityRef.current = -10;
+    velocityRef.current = BASE_JUMP_VELOCITY * vScale;
   };
 
   const startGame = () => {
     setGameStarted(true);
-    console.log("Game Started !");
+    setGameOver(false);
   };
 
   const endGame = useCallback(() => {
+    setGameStarted(false);
+    setGameOver(true);
+    setGamePaused(false);
+    velocityRef.current = 0;
+    setPipes([]);
+  }, []);
+
+  const restartGame = useCallback(() => {
+    setGameOver(false);
     setGameStarted(false);
     setGamePaused(false);
     velocityRef.current = 0;
     setBreadY(-(backgroundDimensions.height / 2) - (breadDimensions.height / 2));
     setPipes([]);
     setScore(0);
-    console.log("Game Ended !");
   }, [backgroundDimensions.height, breadDimensions.height]);
 
   const togglePause = () => {
     setGamePaused((prev) => !prev);
   };
+
+  // Handle jump input (shared between keyboard, touch, and click)
+  const handleJumpInput = useCallback(() => {
+    if (gameOver) return;
+    if (!gameStarted) {
+      startGame();
+      jump();
+    } else {
+      jump();
+    }
+  }, [gameStarted, gameOver, vScale]);
 
   useEffect(() => {
     if (backgroundDimensions.height > 0) {
@@ -78,23 +135,35 @@ function Game() {
     }
   }, [backgroundDimensions.height, breadDimensions.height]);
 
+  // Keyboard controls
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.code === "Space") {
         event.preventDefault();
-        if (!gameStarted) {
-          startGame();
-          jump();
-        } else {
-          jump();
-        }
+        handleJumpInput();
       }
     };
     window.addEventListener("keydown", handleKeyDown);
     return () => {
       window.removeEventListener("keydown", handleKeyDown);
     };
-  }, [gameStarted]);
+  }, [handleJumpInput]);
+
+  // Touch / pointer controls for mobile
+  useEffect(() => {
+    const el = gameAreaRef.current;
+    if (!el) return;
+
+    const handleTouch = (e: TouchEvent) => {
+      e.preventDefault();
+      handleJumpInput();
+    };
+
+    el.addEventListener("touchstart", handleTouch, { passive: false });
+    return () => {
+      el.removeEventListener("touchstart", handleTouch);
+    };
+  }, [handleJumpInput]);
 
   const SpawPipes = () => {
     return (
@@ -104,8 +173,8 @@ function Game() {
           const bottomPipeY = pipe.gapY + GAP_SIZE / 2;
           return (
             <div key={index}>
-              <FirePipe angle={180} x={pipe.x} y={topPipeY}></FirePipe>
-              <FirePipe angle={0} x={pipe.x} y={bottomPipeY}></FirePipe>
+              <FirePipe angle={180} x={pipe.x} y={topPipeY} height={PIPE_HEIGHT} />
+              <FirePipe angle={0} x={pipe.x} y={bottomPipeY} height={PIPE_HEIGHT} />
             </div>
           );
         })}
@@ -156,7 +225,7 @@ function Game() {
 
           const pipeImages = pipeContainerRef.current.querySelectorAll("img");
 
-          pipeImages.forEach((pipeImg, i) => {
+          pipeImages.forEach((pipeImg) => {
             const rawPipe = pipeImg.getBoundingClientRect();
             const pipeRect = getTrimmedRect(rawPipe, pipeInsetsRef.current);
 
@@ -167,9 +236,6 @@ function Game() {
               breadRect.top < pipeRect.bottom &&
               breadRect.bottom > pipeRect.top
             ) {
-              console.log(`🔴 HIT pipe #${i}!`);
-              console.log(`  Bread VISIBLE box: L=${breadRect.left.toFixed(0)} R=${breadRect.right.toFixed(0)} T=${breadRect.top.toFixed(0)} B=${breadRect.bottom.toFixed(0)}`);
-              console.log(`  Pipe  VISIBLE box: L=${pipeRect.left.toFixed(0)} R=${pipeRect.right.toFixed(0)} T=${pipeRect.top.toFixed(0)} B=${pipeRect.bottom.toFixed(0)}`);
               isDead = true;
             }
           });
@@ -177,15 +243,14 @@ function Game() {
       }
 
       if (isDead) {
-        // FREEZE for debugging — change to endGame() when collision feels right
-        console.log("💀 FROZEN! Inspect positions. Press End to reset.");
+        endGame();
         return;
       }
 
       // Move pipes and check for scoring
       setPipes((prevPipes) => {
         let newPipes = prevPipes.map((pipe) => {
-          const newX = pipe.x - 3;
+          const newX = pipe.x - PIPE_SPEED;
           // Score when pipe's right edge passes the bread (at x ≈ 0)
           if (!pipe.scored && newX + PIPE_WIDTH < 0) {
             setScore((s) => s + 1);
@@ -193,16 +258,18 @@ function Game() {
           }
           return { ...pipe, x: newX };
         });
-        newPipes = newPipes.filter((pipe) => pipe.x > -500); // let it fully slide off the left edge
+        newPipes = newPipes.filter((pipe) => pipe.x > PIPE_CLEANUP);
 
         if (
           newPipes.length === 0 ||
-          newPipes[newPipes.length - 1].x < backgroundDimensions.width - 400
+          newPipes[newPipes.length - 1].x < backgroundDimensions.width - PIPE_SPAWN_DIST
         ) {
-          // Keep gapY centered enough that both pipes are mostly visible
-          const minGap = GAP_SIZE + 50;  // far enough from top
-          const maxGap = backgroundDimensions.height - GAP_SIZE - 50;  // far enough from bottom
-          const randomGapY = Math.floor(Math.random() * (maxGap - minGap)) + minGap;
+          // Clamp gapY so both pipes always extend off-screen (no exploitable gaps)
+          const minGap = PIPE_HEIGHT + GAP_SIZE / 2;
+          const maxGap = backgroundDimensions.height - PIPE_HEIGHT - GAP_SIZE / 2;
+          const safeMin = Math.min(minGap, maxGap);
+          const safeMax = Math.max(minGap, maxGap);
+          const randomGapY = Math.floor(Math.random() * (safeMax - safeMin)) + safeMin;
           newPipes.push({ x: backgroundDimensions.width, gapY: randomGapY, scored: false });
         }
         return newPipes;
@@ -227,55 +294,111 @@ function Game() {
     return () => {
       cancelAnimationFrame(animationFrameId);
     };
-  }, [gameStarted, gamePaused, backgroundDimensions, pipes, breadY, backgroundBottom, backgroundTop, breadDimensions, endGame, insetsReady]);
+  }, [gameStarted, gamePaused, backgroundDimensions, pipes, breadY, backgroundBottom, backgroundTop, breadDimensions, endGame, insetsReady, vScale, hScale, gravity, PIPE_WIDTH, PIPE_HEIGHT, GAP_SIZE, PIPE_SPEED, PIPE_SPAWN_DIST, PIPE_CLEANUP]);
 
-  return (
-    <div className="flex items-center justify-center h-screen bg-black overflow-hidden">
-      <div className="flex items-start gap-6">
-        {/* Control Panel — LEFT side, outside the game */}
-        <div className="flex flex-col gap-3 min-w-[160px] pt-4">
-          {/* Score */}
-          <div className="bg-gray-900 rounded-xl px-5 py-3 border border-amber-500/30 shadow-lg shadow-amber-500/10">
-            <p className="text-amber-400 text-xs font-mono tracking-widest uppercase">Score</p>
-            <p className="text-white text-4xl font-bold font-mono mt-1">{score}</p>
-          </div>
-          {/* Buttons */}
+  // Game Over overlay
+  const GameOverScreen = () => {
+    if (!gameOver) return null;
+    return (
+      <div className="absolute inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
+        <div className="bg-gray-900 rounded-2xl px-8 py-10 border border-amber-500/40 shadow-2xl shadow-amber-500/20 text-center max-w-xs mx-4">
+          <p className="text-amber-400 text-sm font-mono tracking-widest uppercase mb-1">Game Over</p>
+          <p className="text-white text-6xl font-bold font-mono mb-2">{score}</p>
+          <p className="text-gray-400 text-xs mb-6">points</p>
           <button
-            className="w-full px-4 py-2.5 rounded-lg font-bold text-sm transition-all
+            className="w-full px-6 py-3 rounded-lg font-bold text-base transition-all
               bg-amber-500 hover:bg-amber-400 text-black shadow-md
               active:scale-95 cursor-pointer"
-            onClick={togglePause}
+            onClick={restartGame}
           >
-            {gamePaused ? "▶ Resume" : "⏸ Pause"}
+            🔃 Play Again
           </button>
-          <button
-            className="w-full px-4 py-2.5 rounded-lg font-bold text-sm transition-all
-              bg-red-600 hover:bg-red-500 text-white shadow-md
-              active:scale-95 cursor-pointer"
-            onClick={endGame}
-          >
-            🔃 Reset
-          </button>
-          {/* Debug info */}
-          <div className="bg-gray-900/80 rounded-lg px-3 py-2 border border-gray-700 text-xs text-gray-400 font-mono">
-            <p>breadY: {breadY.toFixed(0)}</p>
-            <p>pipes: {pipes.length}</p>
-            <p>{gameStarted ? (gamePaused ? "⏸ PAUSED" : "▶ RUNNING") : "⏹ STOPPED"}</p>
-          </div>
         </div>
+      </div>
+    );
+  };
 
-        {/* Game Area — overflow hidden clips pipes to the background */}
-        <div className="relative overflow-hidden">
-          <Background onDimensionChange={setBackgroundDimensions}></Background>
+  // Tap-to-start overlay (shown when game hasn't started and not game over)
+  const StartScreen = () => {
+    if (gameStarted || gameOver) return null;
+    return (
+      <div className="absolute inset-0 z-40 flex items-center justify-center">
+        <div className="text-center animate-pulse">
+          <p className="text-white text-2xl font-bold drop-shadow-lg mb-2">
+            {isMobile ? "Tap to Start" : "Press Space to Start"}
+          </p>
+          <p className="text-gray-300 text-sm drop-shadow">
+            {isMobile ? "Tap to flap" : "Space to flap"}
+          </p>
+        </div>
+      </div>
+    );
+  };
+
+  return (
+    <div className="flex items-center justify-center h-dvh bg-black overflow-hidden">
+      <div className={`flex ${isMobile ? "flex-col" : "flex-row"} items-start gap-4 md:gap-6`}>
+        {/* Control Panel — desktop only */}
+        {!isMobile && (
+          <div className="flex flex-col gap-3 min-w-[160px] pt-4">
+            {/* Score */}
+            <div className="bg-gray-900 rounded-xl px-5 py-3 border border-amber-500/30 shadow-lg shadow-amber-500/10">
+              <p className="text-amber-400 text-xs font-mono tracking-widest uppercase">Score</p>
+              <p className="text-white text-4xl font-bold font-mono mt-1">{score}</p>
+            </div>
+            {/* Buttons */}
+            <button
+              className="w-full px-4 py-2.5 rounded-lg font-bold text-sm transition-all
+                bg-amber-500 hover:bg-amber-400 text-black shadow-md
+                active:scale-95 cursor-pointer"
+              onClick={togglePause}
+            >
+              {gamePaused ? "▶ Resume" : "⏸ Pause"}
+            </button>
+            <button
+              className="w-full px-4 py-2.5 rounded-lg font-bold text-sm transition-all
+                bg-red-600 hover:bg-red-500 text-white shadow-md
+                active:scale-95 cursor-pointer"
+              onClick={restartGame}
+            >
+              🔃 Reset
+            </button>
+            {/* Debug info */}
+            <div className="bg-gray-900/80 rounded-lg px-3 py-2 border border-gray-700 text-xs text-gray-400 font-mono">
+              <p>breadY: {breadY.toFixed(0)}</p>
+              <p>pipes: {pipes.length}</p>
+              <p>vScale: {vScale.toFixed(2)} hScale: {hScale.toFixed(2)}</p>
+              <p>{gameStarted ? (gamePaused ? "⏸ PAUSED" : "▶ RUNNING") : "⏹ STOPPED"}</p>
+            </div>
+          </div>
+        )}
+
+        {/* Game Area */}
+        <div ref={gameAreaRef} className="relative overflow-hidden select-none touch-none">
+          <Background onDimensionChange={setBackgroundDimensions} />
           <div ref={breadRef}>
             {backgroundDimensions.height > 0 && (
-              <Bread y={breadY} onDimensionChange={setBreadDimensions}></Bread>
+              <Bread y={breadY} width={BREAD_WIDTH} onDimensionChange={setBreadDimensions} />
             )}
           </div>
           <div ref={pipeContainerRef}>{SpawPipes()}</div>
+
+          {/* Mobile: floating score during gameplay */}
+          {isMobile && gameStarted && !gameOver && (
+            <div className="absolute top-4 left-1/2 -translate-x-1/2 z-30">
+              <p className="text-white text-5xl font-bold font-mono drop-shadow-lg"
+                style={{ textShadow: "0 2px 8px rgba(0,0,0,0.7)" }}>
+                {score}
+              </p>
+            </div>
+          )}
+
+          <StartScreen />
+          <GameOverScreen />
         </div>
       </div>
     </div>
   );
 }
+
 export default Game;

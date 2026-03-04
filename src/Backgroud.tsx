@@ -1,20 +1,33 @@
-import { useRef } from "react";
-function Background({ onDimensionChange }:{onDimensionChange:Function}) {
+import { useRef, useEffect } from "react";
+
+function Background({
+  onDimensionChange,
+}: {
+  onDimensionChange: (dims: { width: number; height: number }) => void;
+}) {
   const imgRef = useRef<HTMLImageElement>(null);
-  const handleImageLoad = () => { 
+
+  const reportDimensions = () => {
     if (imgRef.current) {
-      // Get the *rendered* size (affected by CSS)
       const renderedWidth = imgRef.current.clientWidth;
       const renderedHeight = imgRef.current.clientHeight;
       onDimensionChange({ width: renderedWidth, height: renderedHeight });
     }
   };
+
+  // Re-report dimensions on window resize (rotation, browser resize)
+  useEffect(() => {
+    const handleResize = () => reportDimensions();
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
   return (
     <img
-      className="h-screen border-white rounded-md blur-[1px]"
+      className="h-screen max-h-dvh w-auto border-white rounded-md blur-[1px]"
       src="/background.png"
       ref={imgRef}
-      onLoad={handleImageLoad}
+      onLoad={reportDimensions}
     />
   );
 }
