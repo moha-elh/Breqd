@@ -32,7 +32,7 @@ function Game() {
   useEffect(() => {
     const breadImg = new Image();
     breadImg.crossOrigin = "anonymous";
-    breadImg.src = "../public/bread.png";
+    breadImg.src = "/bread.png";
     breadImg.onload = () => {
       breadInsetsRef.current = getVisibleInsets(breadImg);
       console.log("Bread visible insets (fractions):", breadInsetsRef.current);
@@ -40,7 +40,7 @@ function Game() {
 
     const pipeImg = new Image();
     pipeImg.crossOrigin = "anonymous";
-    pipeImg.src = "../public/Fire pipe.png";
+    pipeImg.src = "/Fire pipe.png";
     pipeImg.onload = () => {
       pipeInsetsRef.current = getVisibleInsets(pipeImg);
       console.log("Pipe visible insets (fractions):", pipeInsetsRef.current);

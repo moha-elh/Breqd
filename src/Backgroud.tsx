@@ -12,7 +12,7 @@ function Background({ onDimensionChange }:{onDimensionChange:Function}) {
   return (
     <img
       className="h-screen border-white rounded-md blur-[1px]"
-      src="../public/background.png"
+      src="/background.png"
       ref={imgRef}
       onLoad={handleImageLoad}
     />

@@ -1,6 +1,6 @@
 function FirePipe({angle, x, y}:{angle: number, x: number, y: number}){
   return(
-    <img src="../public/Fire pipe.png" 
+    <img src="/Fire pipe.png" 
     className="h-100 w-auto absolute"
     style={{ 
       left: `${x}px`,

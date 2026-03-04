@@ -13,7 +13,7 @@ function Bread({ y, onDimensionChange }: { y: number, onDimensionChange: Functio
   };
   return (
     <img
-      src="../public/bread.png"
+      src="/bread.png"
       className="w-28 h-auto absolute z-20"
       ref= {breadRef}
       onLoad={handleLoad}
