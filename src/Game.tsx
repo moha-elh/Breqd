@@ -10,7 +10,8 @@ function Game() {
   const [breadY, setBreadY] = useState(0);
   const [gameStarted, setGameStarted] = useState(false);
   const [gamePaused, setGamePaused] = useState(false);
-  const [pipes, setPipes] = useState<{ x: number; gapY: number }[]>([]);
+  const [pipes, setPipes] = useState<{ x: number; gapY: number; scored: boolean }[]>([]);
+  const [score, setScore] = useState(0);
   const velocityRef = useRef(0);
   const breadRef = useRef<HTMLDivElement>(null);
   const pipeContainerRef = useRef<HTMLDivElement>(null);
@@ -21,7 +22,7 @@ function Game() {
   const [insetsReady, setInsetsReady] = useState(false);
 
   const gravity = 0.5;
-  const score = 0;
+  const PIPE_WIDTH = 80;  // approximate width of the visible pipe
   const PIPE_HEIGHT = 400;
   const GAP_SIZE = 200;
   const backgroundTop = -(backgroundDimensions.height) - (breadDimensions.height / 3);
@@ -62,6 +63,7 @@ function Game() {
     velocityRef.current = 0;
     setBreadY(-(backgroundDimensions.height / 2) - (breadDimensions.height / 2));
     setPipes([]);
+    setScore(0);
     console.log("Game Ended !");
   }, [backgroundDimensions.height, breadDimensions.height]);
 
@@ -180,22 +182,28 @@ function Game() {
         return;
       }
 
-      // Move pipes
+      // Move pipes and check for scoring
       setPipes((prevPipes) => {
-        let newPipes = prevPipes.map((pipe) => ({
-          ...pipe,
-          x: pipe.x - 3,
-        }));
-        newPipes = newPipes.filter((pipe) => pipe.x > -100);
+        let newPipes = prevPipes.map((pipe) => {
+          const newX = pipe.x - 3;
+          // Score when pipe's right edge passes the bread (at x ≈ 0)
+          if (!pipe.scored && newX + PIPE_WIDTH < 0) {
+            setScore((s) => s + 1/2);
+            return { ...pipe, x: newX, scored: true };
+          }
+          return { ...pipe, x: newX };
+        });
+        newPipes = newPipes.filter((pipe) => pipe.x > -500); // let it fully slide off the left edge
 
         if (
           newPipes.length === 0 ||
           newPipes[newPipes.length - 1].x < backgroundDimensions.width - 400
         ) {
-          const minGap = 200;
-          const maxGap = backgroundDimensions.height - 200;
+          // Keep gapY centered enough that both pipes are mostly visible
+          const minGap = GAP_SIZE + 50;  // far enough from top
+          const maxGap = backgroundDimensions.height - GAP_SIZE - 50;  // far enough from bottom
           const randomGapY = Math.floor(Math.random() * (maxGap - minGap)) + minGap;
-          newPipes.push({ x: backgroundDimensions.width, gapY: randomGapY });
+          newPipes.push({ x: backgroundDimensions.width, gapY: randomGapY, scored: false });
         }
         return newPipes;
       });
@@ -222,7 +230,7 @@ function Game() {
   }, [gameStarted, gamePaused, backgroundDimensions, pipes, breadY, backgroundBottom, backgroundTop, breadDimensions, endGame, insetsReady]);
 
   return (
-    <div className="flex items-center justify-center h-screen bg-black">
+    <div className="flex items-center justify-center h-screen bg-black overflow-hidden">
       <div className="flex items-start gap-6">
         {/* Control Panel — LEFT side, outside the game */}
         <div className="flex flex-col gap-3 min-w-[160px] pt-4">
@@ -246,7 +254,7 @@ function Game() {
               active:scale-95 cursor-pointer"
             onClick={endGame}
           >
-            ♻️ Reset
+            🔃 Reset
           </button>
           {/* Debug info */}
           <div className="bg-gray-900/80 rounded-lg px-3 py-2 border border-gray-700 text-xs text-gray-400 font-mono">
@@ -256,8 +264,8 @@ function Game() {
           </div>
         </div>
 
-        {/* Game Area */}
-        <div className="relative">
+        {/* Game Area — overflow hidden clips pipes to the background */}
+        <div className="relative overflow-hidden">
           <Background onDimensionChange={setBackgroundDimensions}></Background>
           <div ref={breadRef}>
             {backgroundDimensions.height > 0 && (
