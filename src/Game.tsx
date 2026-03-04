@@ -188,7 +188,7 @@ function Game() {
           const newX = pipe.x - 3;
           // Score when pipe's right edge passes the bread (at x ≈ 0)
           if (!pipe.scored && newX + PIPE_WIDTH < 0) {
-            setScore((s) => s + 1/2);
+            setScore((s) => s + 1);
             return { ...pipe, x: newX, scored: true };
           }
           return { ...pipe, x: newX };
