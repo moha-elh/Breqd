@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef, useCallback, type KeyboardEvent } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
 import Background from "./Backgroud";
 import Bread from "./Bread";
 import FirePipe from "./FirePipe";
@@ -79,7 +79,7 @@ function Game() {
   }, [backgroundDimensions.height, breadDimensions.height]);
 
   useEffect(() => {
-    const handleKeyDown = (event: KeyboardEvent<Element>) => {
+    const handleKeyDown = (event: KeyboardEvent) => {
       if (event.code === "Space") {
         event.preventDefault();
         if (!gameStarted) {
