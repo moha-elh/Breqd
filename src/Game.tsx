@@ -53,7 +53,8 @@ function Game() {
   const PIPE_HEIGHT = BASE_PIPE_HEIGHT * vScale;
   // Horizontal constants — scale with width
   const PIPE_WIDTH = BASE_PIPE_WIDTH * hScale;
-  const PIPE_SPEED = BASE_PIPE_SPEED * hScale;
+  const speedMultiplier = 1 + Math.min(score * 0.1 / 5, 1.5); // 10% faster every 5 pts, max 2.5x
+  const PIPE_SPEED = BASE_PIPE_SPEED * hScale * speedMultiplier;
   const PIPE_SPAWN_DIST = BASE_PIPE_SPAWN_DIST * hScale;
   const PIPE_CLEANUP = BASE_PIPE_CLEANUP * hScale;
   const BREAD_WIDTH = BASE_BREAD_WIDTH * hScale;
@@ -367,13 +368,6 @@ function Game() {
             >
               🔃 Reset
             </button>
-            {/* Debug info */}
-            <div className="bg-gray-900/80 rounded-lg px-3 py-2 border border-gray-700 text-xs text-gray-400 font-mono">
-              <p>breadY: {breadY.toFixed(0)}</p>
-              <p>pipes: {pipes.length}</p>
-              <p>vScale: {vScale.toFixed(2)} hScale: {hScale.toFixed(2)}</p>
-              <p>{gameStarted ? (gamePaused ? "⏸ PAUSED" : "▶ RUNNING") : "⏹ STOPPED"}</p>
-            </div>
           </div>
         )}
 
