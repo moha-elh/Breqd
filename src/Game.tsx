@@ -155,6 +155,10 @@ function Game() {
     if (!el) return;
 
     const handleTouch = (e: TouchEvent) => {
+      // Let button taps through (game-over "Play Again", etc.)
+      const target = e.target as HTMLElement;
+      if (target.closest("button")) return;
+
       e.preventDefault();
       handleJumpInput();
     };
