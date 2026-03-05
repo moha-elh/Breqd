@@ -33,6 +33,7 @@ function Game() {
   const breadRef = useRef<HTMLDivElement>(null);
   const pipeContainerRef = useRef<HTMLDivElement>(null);
   const gameAreaRef = useRef<HTMLDivElement>(null);
+  const lastFrameTimeRef = useRef<number | null>(null);
 
   // Audio refs
   const fireSoundRef = useRef<HTMLAudioElement | null>(null);
@@ -136,6 +137,7 @@ function Game() {
   const startGame = () => {
     setGameStarted(true);
     setGameOver(false);
+    lastFrameTimeRef.current = null; // reset so first frame has dt=0 (no jump)
     // Start fire background sound
     fireSoundRef.current?.play().catch(() => {});
   };
@@ -255,20 +257,19 @@ function Game() {
     if (!gameStarted) return;
 
     let animationFrameId: number;
-    let lastFrameTime: number | null = null;
     const TARGET_FRAME_MS = 1000 / 60; // baseline: 60 fps
 
     const gameLoop = (timestamp: number) => {
       if (gamePaused) {
-        lastFrameTime = null; // reset so we don't get a huge dt on unpause
+        lastFrameTimeRef.current = null; // reset so we don't get a huge dt on unpause
         animationFrameId = requestAnimationFrame(gameLoop);
         return;
       }
 
       // Calculate delta-time multiplier (1.0 at 60fps)
-      if (lastFrameTime === null) lastFrameTime = timestamp;
-      const elapsed = timestamp - lastFrameTime;
-      lastFrameTime = timestamp;
+      if (lastFrameTimeRef.current === null) lastFrameTimeRef.current = timestamp;
+      const elapsed = timestamp - lastFrameTimeRef.current;
+      lastFrameTimeRef.current = timestamp;
       const dt = Math.min(elapsed / TARGET_FRAME_MS, 3); // cap at 3× to prevent explosion
 
       let isDead = false;
