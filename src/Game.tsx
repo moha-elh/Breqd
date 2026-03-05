@@ -255,12 +255,21 @@ function Game() {
     if (!gameStarted) return;
 
     let animationFrameId: number;
+    let lastFrameTime: number | null = null;
+    const TARGET_FRAME_MS = 1000 / 60; // baseline: 60 fps
 
-    const gameLoop = () => {
+    const gameLoop = (timestamp: number) => {
       if (gamePaused) {
+        lastFrameTime = null; // reset so we don't get a huge dt on unpause
         animationFrameId = requestAnimationFrame(gameLoop);
         return;
       }
+
+      // Calculate delta-time multiplier (1.0 at 60fps)
+      if (lastFrameTime === null) lastFrameTime = timestamp;
+      const elapsed = timestamp - lastFrameTime;
+      lastFrameTime = timestamp;
+      const dt = Math.min(elapsed / TARGET_FRAME_MS, 3); // cap at 3× to prevent explosion
 
       let isDead = false;
 
@@ -303,7 +312,7 @@ function Game() {
       // Move pipes and check for scoring
       setPipes((prevPipes) => {
         let newPipes = prevPipes.map((pipe) => {
-          const newX = pipe.x - PIPE_SPEED;
+          const newX = pipe.x - PIPE_SPEED * dt;
           // Score when pipe's right edge passes the bread (at x ≈ 0)
           if (!pipe.scored && newX + PIPE_WIDTH < 0) {
             setScore((s) => s + 1);
@@ -329,9 +338,9 @@ function Game() {
       });
 
       // Apply gravity
-      velocityRef.current += gravity;
+      velocityRef.current += gravity * dt;
       setBreadY((prev) => {
-        let nextY = prev + velocityRef.current;
+        let nextY = prev + velocityRef.current * dt;
         if (nextY < backgroundTop) {
           nextY = backgroundTop;
           velocityRef.current = 0;
