@@ -452,6 +452,70 @@ function Game() {
           <StartScreen />
           <GameOverScreen />
         </div>
+
+        {/* Lore Panel — desktop only */}
+        {!isMobile && (
+          <div
+            className="flex flex-col gap-4 max-w-[260px] pt-4"
+            style={{ fontFamily: "'IM Fell English', serif" }}
+          >
+            <div
+              className="relative rounded-xl px-6 py-5 border border-amber-700/50 shadow-lg"
+              style={{
+                background: "linear-gradient(160deg, #1a1408 0%, #2a1f0e 40%, #1a1408 100%)",
+                boxShadow: "inset 0 0 30px rgba(0,0,0,0.4), 0 4px 20px rgba(180,130,50,0.1)",
+              }}
+            >
+              {/* Decorative corner flourishes */}
+              <div className="absolute top-2 left-3 text-amber-700/40 text-lg select-none">❧</div>
+              <div className="absolute top-2 right-3 text-amber-700/40 text-lg select-none" style={{ transform: "scaleX(-1)" }}>❧</div>
+
+              <h2
+                className="text-amber-400/90 text-sm tracking-[0.3em] uppercase text-center mb-4 pb-2"
+                style={{ borderBottom: "1px solid rgba(180,130,50,0.25)" }}
+              >
+                ✦ The Lore ✦
+              </h2>
+
+              <p
+                className="text-amber-100/85 text-[0.95rem] leading-relaxed"
+                style={{ textIndent: "1.5em" }}
+              >
+                <span
+                  className="not-italic text-amber-400/90 float-left mr-1"
+                  style={{ fontSize: "2.5rem", lineHeight: "0.8", marginTop: "0.1em" }}
+                >
+                  I
+                </span>
+                n a quiet kitchen, bathed in golden morning light, our humble Bread rested upon the
+                windowsill — warm, content, and blissfully unaware of the fate that loomed.
+              </p>
+
+              <p className="text-amber-100/85 text-[0.95rem] leading-relaxed mt-3" style={{ textIndent: "1.5em" }}>
+                Then came the Ember Crew — wicked flames that crept from the old stone oven, hungry
+                and relentless. They seized the Bread and cast it into the blazing inferno within.
+              </p>
+
+              <p className="text-amber-100/85 text-[0.95rem] leading-relaxed mt-3" style={{ textIndent: "1.5em" }}>
+                Now, trapped amidst pillars of roaring fire, our golden hero must dodge, weave, and
+                rise — lest it become nothing more than toast.
+              </p>
+
+              <div
+                className="mt-4 pt-3 text-center"
+                style={{ borderTop: "1px solid rgba(180,130,50,0.25)" }}
+              >
+                <p className="text-amber-500/50 text-xs tracking-widest uppercase">
+                  May the crust endure
+                </p>
+              </div>
+
+              {/* Bottom flourishes */}
+              <div className="absolute bottom-2 left-3 text-amber-700/40 text-lg select-none" style={{ transform: "scaleY(-1)" }}>❧</div>
+              <div className="absolute bottom-2 right-3 text-amber-700/40 text-lg select-none" style={{ transform: "scale(-1, -1)" }}>❧</div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
