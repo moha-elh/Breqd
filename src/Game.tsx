@@ -34,6 +34,12 @@ function Game() {
   const pipeContainerRef = useRef<HTMLDivElement>(null);
   const gameAreaRef = useRef<HTMLDivElement>(null);
 
+  // Audio refs
+  const fireSoundRef = useRef<HTMLAudioElement | null>(null);
+  const jumpSoundRef = useRef<HTMLAudioElement | null>(null);
+  const deathSoundRef = useRef<HTMLAudioElement | null>(null);
+  const jumpTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
   // Stores the visible insets (fraction of transparent padding) for bread and pipe PNGs
   const breadInsetsRef = useRef({ top: 0, bottom: 0, left: 0, right: 0 });
   const pipeInsetsRef = useRef({ top: 0, bottom: 0, left: 0, right: 0 });
@@ -69,6 +75,33 @@ function Game() {
     return () => window.removeEventListener("resize", checkMobile);
   }, []);
 
+  // Initialize audio
+  useEffect(() => {
+    const fire = new Audio("/fire sound.mp3");
+    fire.volume = 0.015; // 🔊 Fire volume: 0.0 (silent) to 1.0 (max)
+    // Loop the fire sound but skip the last second for a clean loop
+    fire.addEventListener("timeupdate", () => {
+      if (fire.duration && fire.currentTime >= fire.duration - 1) {
+        fire.currentTime = 0;
+      }
+    });
+    fireSoundRef.current = fire;
+
+    const jump = new Audio("/jump sound.mp3");
+    jump.volume = 0.1;
+    jumpSoundRef.current = jump;
+
+    const death = new Audio("/death sound.mp3");
+    death.volume = 0.2;
+    deathSoundRef.current = death;
+
+    return () => {
+      fire.pause();
+      jump.pause();
+      death.pause();
+    };
+  }, []);
+
   // Scan PNG images once they load to find actual visible bounds
   useEffect(() => {
     const breadImg = new Image();
@@ -89,11 +122,22 @@ function Game() {
 
   const jump = () => {
     velocityRef.current = BASE_JUMP_VELOCITY * vScale;
+
+    // Play first 1 second of jump sound
+    const snd = jumpSoundRef.current;
+    if (snd) {
+      if (jumpTimeoutRef.current) clearTimeout(jumpTimeoutRef.current);
+      snd.currentTime = 0;
+      snd.play().catch(() => {});
+      jumpTimeoutRef.current = setTimeout(() => snd.pause(), 1000);
+    }
   };
 
   const startGame = () => {
     setGameStarted(true);
     setGameOver(false);
+    // Start fire background sound
+    fireSoundRef.current?.play().catch(() => {});
   };
 
   const endGame = useCallback(() => {
@@ -102,6 +146,10 @@ function Game() {
     setGamePaused(false);
     velocityRef.current = 0;
     setPipes([]);
+    // Stop fire sound, play death sound
+    fireSoundRef.current?.pause();
+    deathSoundRef.current!.currentTime = 0.5; // ⏱️ Death sound start: seconds (0.2 = 200ms)
+    deathSoundRef.current?.play().catch(() => {});
   }, []);
 
   const restartGame = useCallback(() => {

@@ -12,12 +12,11 @@ function FirePipe({
   return (
     <img
       src="/Fire pipe.png"
-      className="w-auto absolute"
+      className="w-auto absolute left-0 top-0"
       style={{
         height: `${height}px`,
-        left: `${x}px`,
-        top: `${y}px`,
-        transform: `rotate(${angle}deg)`,
+        transform: `translate3d(${x}px, ${y}px, 0) rotate(${angle}deg)`,
+        willChange: "transform",
       }}
     />
   );

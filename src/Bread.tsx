@@ -25,7 +25,8 @@ function Bread({
       className="h-auto absolute z-20"
       style={{
         width: `${width}px`,
-        transform: `translateY(${y}px)`,
+        transform: `translate3d(0, ${y}px, 0)`,
+        willChange: "transform",
       }}
       ref={breadRef}
       onLoad={handleLoad}

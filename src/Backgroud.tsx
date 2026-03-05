@@ -24,7 +24,7 @@ function Background({
 
   return (
     <img
-      className="h-screen max-h-dvh w-auto border-white rounded-md blur-[1px]"
+      className="h-screen max-h-dvh w-auto border-white rounded-md"
       src="/background.png"
       ref={imgRef}
       onLoad={reportDimensions}
