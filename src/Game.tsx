@@ -106,14 +106,14 @@ function Game() {
   useEffect(() => {
     const breadImg = new Image();
     breadImg.crossOrigin = "anonymous";
-    breadImg.src = "/bread.png";
+    breadImg.src = "/bread.webp";
     breadImg.onload = () => {
       breadInsetsRef.current = getVisibleInsets(breadImg);
     };
 
     const pipeImg = new Image();
     pipeImg.crossOrigin = "anonymous";
-    pipeImg.src = "/Fire pipe.png";
+    pipeImg.src = "/Fire pipe.webp";
     pipeImg.onload = () => {
       pipeInsetsRef.current = getVisibleInsets(pipeImg);
       setInsetsReady(true);

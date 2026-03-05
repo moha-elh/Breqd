@@ -25,7 +25,7 @@ function Background({
   return (
     <img
       className="h-screen max-h-dvh w-auto border-white rounded-md"
-      src="/background.png"
+      src="/background.webp"
       ref={imgRef}
       onLoad={reportDimensions}
     />

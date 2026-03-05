@@ -21,7 +21,7 @@ function Bread({
 
   return (
     <img
-      src="/bread.png"
+      src="/bread.webp"
       className="h-auto absolute z-20"
       style={{
         width: `${width}px`,

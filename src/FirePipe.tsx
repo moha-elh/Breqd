@@ -11,7 +11,7 @@ function FirePipe({
 }) {
   return (
     <img
-      src="/Fire pipe.png"
+      src="/Fire pipe.webp"
       className="w-auto absolute left-0 top-0"
       style={{
         height: `${height}px`,
