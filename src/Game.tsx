@@ -540,7 +540,7 @@ function Game() {
                 </svg>
               </a>
               <a
-                href="https://x.com/Mouhssine_edits" // ← your X (Twitter) URL here
+                href="https://x.com/Mouhssine_elh" // ← your X (Twitter) URL here
                 target="_blank"
                 rel="noopener noreferrer"
                 className="group p-2.5 rounded-lg border border-amber-700/30 bg-gray-900/80 hover:bg-amber-500/10 hover:border-amber-500/50 transition-all duration-200"
